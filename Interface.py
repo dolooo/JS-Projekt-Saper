@@ -3,10 +3,10 @@ from Functionality import *
 import time
 
 
-# glowne okno gry
 class MainWindow:
+    """główne okienko gry"""
     def __init__(self, controller):
-        # ustawienia parametrów głównego okna gry
+        """ustawienia parametrów głównego okienka gry"""
         self._window = Tk()
         self._controller = controller
         self._window.title("Saper")
@@ -27,8 +27,9 @@ class MainWindow:
         self._controller = controller
 
 
-# menu glowne zawierajace 3 pola tekstowe do wprowadzenia parametrow rozgrywki oraz przycisk rozpoczynajacy nowa gre
 class MainMenu:
+    """menu główne: 3 pola tekstowe do wprowadzenia parametrów rozgrywki oraz przycisk rozpoczynający nową grę"""
+
     def __init__(self, window, controller):
         self._window = window
         # tekst oraz pole tekstowe do wprowadzenia szerokosci mapy
@@ -64,8 +65,8 @@ class MainMenu:
         self._labelError.grid_forget()
 
 
-# mapa gry ktora po prawej stronie wyswietla liczbe min oraz oflagowanych pól, a takze licznik czasu
 class GameMap:
+    """mapa gry która po prawej stronie wyświetla liczbę min oraz oflagowanych pól, a także licznik czasu"""
     def __init__(self, window, controller, positionx=3, positiony=1):
         self._controller = controller
         self._posX = positionx
@@ -85,7 +86,7 @@ class GameMap:
         self._textTimer = StringVar()
         self._textTimer.set("0")
 
-        self._labelWinLost = Label(self._window, text="white")
+        self._labelGameResult = Label(self._window, text="white")
         self._labelEmpty = Label(self._window, image='', width="2")
         self._labelMarkedMines = Label(self._window, textvariable=self._textMarkedMines)
         self._labelMarkedIcon = Label(self._window, image=self._flagImage)
@@ -94,13 +95,14 @@ class GameMap:
         self._labelTimer = Label(self._window, textvariable=self._textTimer)
 
     def newMap(self, height, width, mines):
+        """tworzenie nowej mapy o określonych wymiarach i liczbie min"""
         self._markedMines = 0
         self._textNumberOfMines.set(str(mines))
 
         self._textMarkedMines.set(": 0")
 
-        self._labelWinLost.config(text="", bg="white")
-        self._labelWinLost.grid(column=self._posX, row=self._posY, columnspan=width, sticky="news")
+        self._labelGameResult.config(text="", bg="white")
+        self._labelGameResult.grid(column=self._posX, row=self._posY, columnspan=width, sticky="news")
         self._labelTimer.grid(column=self._posX + width + 1, row=self._posY, columnspan=2)
 
         self._labelEmpty.grid(column=width + self._posX + 1, row=self._posY + 1, rowspan=2)
@@ -117,17 +119,24 @@ class GameMap:
         self._timerRunning = False
 
     def win(self):
-        self._labelWinLost.config(text="WYGRALES!", bg="green")
+        """wyświetla komunikat o wygranej, dezaktywuje wszystkie przyciski i zatrzymuje stoper """
+        self._labelGameResult.config(text="WYGRALES!", bg="green")
         [[x.disable() for x in y] for y in self._mapOfButtons]
         self._timerRunning = False
 
     def defeat(self, x, y):
-        self._labelWinLost.config(text="PRZEGRALES!", bg="red")
+        """wyświetla komunikat o przegranej, dezaktywuje wszystkie przyciski i zatrzymuje stoper """
+        self._labelGameResult.config(text="PRZEGRALES!", bg="red")
         [[xx.disable() for xx in yy] for yy in self._mapOfButtons]
         self._mapOfButtons[y][x].mark(marked="minered")
         self._timerRunning = False
 
     def setButtonMark(self, pos_x, pos_y, what):
+        """funkcja oznaczająca przycisk.
+        flag - "tu jest mina",
+        empty - brak oznaczenia,
+        questionmark - "tu może byc mina".
+        W przypadku "flag" blokuje możliwość wciśnięcia przycisku."""
         if what == "flag":
             self._markedMines += 1
             self._mapOfButtons[pos_y][pos_x].disable()
@@ -141,22 +150,25 @@ class GameMap:
         self._textMarkedMines.set(": " + str(self._markedMines))
 
     def showMinePlace(self, x, y, what=""):
+        """funkcja odkrywająca pole, na którym znajduje się mina"""
         self._mapOfButtons[y][x].mark(marked="highlight")
         if what != "onlyColor":
             self._mapOfButtons[y][x].mark(marked="mine")
 
     def uncoverPlace(self, x, y, number):
+        """wywołanie odkrycia pojedynczego pola"""
         self._mapOfButtons[y][x].uncover(number)
 
     def drawButtons(self, width, height):
-        [[y.destroy() for y in x] for x in self._mapOfButtons]
+        """tworzy siatkę przycisków przy pomocy klasy GameButton"""
         self._mapOfButtons = [[GameButton(self._window, i, j, self._controller.LMB, self._controller.RMB,
                                           i + self._posX, j + self._posY + 1)
                                for i in range(width)] for j in range(height)]
 
     def timer(self):
+        """funkcja odpowiedzialna za licznik czasu"""
         if self._timerRunning:
-            self._textTimer.set( str("%3.1f"%(time.time() - self._time)) )
+            self._textTimer.set(str("%3.1f" % (time.time() - self._time)))
         elif self._timerStarted:
             self._time = time.time()
             self._textTimer.set(str(0))
@@ -165,9 +177,10 @@ class GameMap:
         self._window.after(100, self.timer)
 
 
-#klasa odpowiedzialna za przyciski na mapie gry
 class GameButton:
+    """klasa odpowiedzialna za przyciski na mapie gry"""
     def __init__(self, window, i, j, funLMB, funRMB, positionx, positiony):
+        """ustawianie podstawowych parametrów przycisków"""
         self.window = window
         self.posX = positionx
         self.posY = positiony
@@ -187,16 +200,23 @@ class GameButton:
         self.empty_image = PhotoImage(file='images/empty.png')
 
         self.thisButton = Button(self.window, bg='grey85', disabledforeground="black", relief=RAISED, overrelief=GROOVE,
-                                     width=20, image=self.empty_image, command=(lambda a=i, b=j: funLMB(a, b)))
+                                 width=20, image=self.empty_image, command=(lambda a=i, b=j: funLMB(a, b)))
         self.thisButton.bind("<Button-3>", lambda fun, a=i, b=j: funRMB(a, b))
         self.thisButton.grid(row=positiony, column=positionx, sticky="news", padx=0, pady=0)
 
     def uncover(self, number=0):
+        """odkrywa pojedyncze pole i wyświetla odpowiednią liczbę sąsiadujących min"""
         self.thisButton.destroy()
         self.thisButton = Label(image=self.number_images[number], bg="grey85", width=20, height=20)
         self.thisButton.grid(row=self.posY, column=self.posX, sticky="news")
 
     def mark(self, marked="empty"):
+        """minered - dezaktywuje dany przycisk i w jego miejscu wyswietla czerwoną minę
+                mine - dezaktywuje dany przycisk i wyświetla zwykłą minę
+                highlight - zmienia kolor pola na jaśniejszy
+                flag - ustawia grafikę jako flagę
+                questionmark - ustawia grafikę jako pytajnik
+                empty - ustawia przycisk jako puste pole (defaultowe wywołanie) """
         if marked == "minered":
             self.thisButton.destroy()
             self.thisButton = Label(image=self.mineRed_image, width=20, height=20)
@@ -214,10 +234,10 @@ class GameButton:
         self.thisButton.grid(row=self.posY, column=self.posX, sticky="news")
 
     def disable(self):
+        """funkcja do dezaktywacji przycisku"""
         self.thisButton.config(stat=DISABLED)
 
     def active(self):
+        """funkcja do aktywacji przycisku"""
         self.thisButton.config(stat=ACTIVE)
 
-    def destroy(self):
-        self.thisButton.destroy()
