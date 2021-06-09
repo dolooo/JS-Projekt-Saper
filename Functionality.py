@@ -26,9 +26,9 @@ class Saper:
         self.gameExtras()
 
     def getAndSetEntrySettings(self):
-        """odbieranie i ustawianie ustawień wejściowych
-            sprawdzenie czy są one zgodne z definicją gry (jeśli nie to rzucenie wyjątku)
-            jeśli dane są prawidłowe to tworzy nową mapę oraz losowo wypełnia ją minami"""
+        """-odbieranie i ustawianie ustawień wejściowych
+        -sprawdzenie czy są one zgodne z definicją gry (jeśli nie to rzucenie wyjątku)
+        -jeśli dane są prawidłowe to tworzy nową mapę oraz losowo wypełnia ją minami"""
         self._mapWidth, self._mapHeight, self._mines = self._view.mainMenu.getEntrySettings()
         self._mapWidth = int(self._mapWidth)
         self._mapHeight = int(self._mapHeight)
@@ -57,10 +57,12 @@ class Saper:
             self._view.mainMenu.showError("Złe wymiary lub zła ilość min")
 
     def newRandomMap(self):
-        """wypełnienie mapy min w losowy sposób przy użyciu funkcjonalności random
+        """wypełnienie mapy ustawiając w losowy sposób miny przy użyciu funkcjonalności random, oraz
+        oznaczanie pustych pól liczbami oznaczającymi liczbę sąsiadujących min tego pola
         M - mina
         0 - puste pole
-        n - znacznik "nothing"
+        1-8 - pole z odpowiednią liczbą sąsiadujących min
+        n - znacznik "nothing" (określany za pomocą PPM)
          przykładowo kombinacja Mn oznacza, że na danym polu jest mina i nie ma żadnego znacznika """
         rd = random.sample(range(0, self._mapWidth * self._mapHeight), self._mines)
         self._mapOfMines = [["Mn" if j * self._mapWidth + i in rd else "0n" for i in range(self._mapWidth)]
@@ -69,7 +71,7 @@ class Saper:
                             + "n" for i in range(self._mapWidth)] for j in range(self._mapHeight)]
 
     def countNeighbourMines(self, x, y):
-        """liczenie min sąsiadujacych z wybranym przyciskiem"""
+        """liczenie min sąsiadujących z wybranym przyciskiem"""
         counter = 0
         for i in range(-1, 2):
             for j in range(-1, 2):
@@ -85,7 +87,8 @@ class Saper:
     def LMB(self, pos_x, pos_y):
         """funkcjonalność lewego przycisku myszy
             jesli klikniemy na minę - gra się konczy, miny odkrywają się, uruchamia sie procedura od przegranej
-            jesli klikniemy w puste pole, odkrywamy puste pola w poblizu (jesli sa), licznik wcisnietych pol wzrasta"""
+            jesli klikniemy w puste pole, odkrywamy puste pola w poblizu (jesli nie sąsiaduje z żadną miną),
+            licznik wcisnietych pól wzrasta"""
         if self._mapOfMines[pos_y][pos_x][0] == "M":
             self._gameEnded = True
             self.showMines()
@@ -96,16 +99,17 @@ class Saper:
             else:
                 self._clearedButtons += 1
                 self._view.gameMap.uncoverPlace(pos_x, pos_y, int(self._mapOfMines[pos_y][pos_x][0]))
-            self._mapOfMines[pos_y][pos_x] = self._mapOfMines[pos_y][pos_x][0] + "o"
+            self._mapOfMines[pos_y][pos_x] = self._mapOfMines[pos_y][pos_x][0] + "x"
             self.winCheck()
 
     def RMB(self, pos_x, pos_y):
         """funkcjonalność prawego przycisku myszy
-            znaczniki : f - "flag", q - "questionmark", n - "nothing"
+            znaczniki : x - "nieaktywny", f - "flag", q - "questionmark", n - "nothing"
+        jeśli gra jeszcze się nie zakończyła oraz dana mina nie ma znacznika x:
             jesli pole ma znacznik f, to oznaczenie pola zmienia się na q
             jesli pole ma znacznik q, to oznaczenie pola zmienia się na n
             jesli pole ma znacznik n, to oznaczenie pola zmienia sie na f"""
-        if not self._gameEnded and self._mapOfMines[pos_y][pos_x][1] != "o":
+        if not self._gameEnded and self._mapOfMines[pos_y][pos_x][1] != "x":
             if self._mapOfMines[pos_y][pos_x][1] == "f":
                 self._markedMines -= 1
                 self._mapOfMines[pos_y][pos_x] = self._mapOfMines[pos_y][pos_x][0] + "q"
@@ -170,5 +174,3 @@ class WrongDataException(Exception):
 
     def __str__(self):
         return self.comment
-
-

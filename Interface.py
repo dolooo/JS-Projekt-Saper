@@ -1,5 +1,4 @@
 from tkinter import *
-from Functionality import *
 import time
 
 
@@ -22,9 +21,6 @@ class MainWindow:
 
     def windowLoop(self):
         self._window.mainloop()
-
-    def setController(self, controller):
-        self._controller = controller
 
 
 class MainMenu:
@@ -97,8 +93,8 @@ class GameMap:
     def newMap(self, height, width, mines):
         """tworzenie nowej mapy o określonych wymiarach i liczbie min"""
         self._markedMines = 0
-        self._textNumberOfMines.set(str(mines))
 
+        self._textNumberOfMines.set(": " + str(mines))
         self._textMarkedMines.set(": 0")
 
         self._labelGameResult.config(text="", bg="white")
